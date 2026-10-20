@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sorteio Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#0b1418; --panel:#122027; --panel2:#0f1b21; --line:#24404a; --fg:#e8e2d0; --muted:#8fa3a6;
+  --gold:#c8a45a; --gold-hi:#f0d38a; --win:#4fb487; --lose:#c4615a; --skip:#7d8fa8;
+  --display:"Cinzel","Trajan Pro",Georgia,serif;
+  --body:"Barlow","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%, #1d3a40 0%, transparent 70%);min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding:28px 16px 60px;display:flex;flex-direction:column;gap:30px}
+header{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,5vw,38px);letter-spacing:.04em;margin:0;color:var(--gold-hi)}
+h3{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.08em;margin:0;color:var(--gold)}
+.sub{color:var(--muted);margin:2px 0 0;font-size:14px}
+.sync{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+section{display:flex;flex-direction:column;gap:12px}
+
+.portrait{border-radius:50%;overflow:hidden;display:grid;place-items:center;flex:none;
+  background:radial-gradient(circle at 50% 35%,#1f3a42,#0d1a1f);font-family:var(--display);font-weight:800;color:var(--gold-hi)}
+.portrait img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.1)}
+
+.ring{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:4px;
+  padding:36px 20px 30px;align-items:center;gap:20px;text-align:center;overflow:hidden}
+.ring::before{content:"";position:absolute;inset:10px;border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);pointer-events:none}
+.crest{width:148px;height:148px;font-size:50px;border:2px solid var(--gold);
+  box-shadow:0 0 0 6px var(--panel),0 0 0 7px var(--line),0 0 40px -10px var(--gold)}
+.crest.spin{animation:pulse .12s linear infinite alternate}
+@keyframes pulse{from{box-shadow:0 0 0 6px var(--panel),0 0 0 7px var(--line),0 0 30px -10px var(--gold)}to{box-shadow:0 0 0 6px var(--panel),0 0 0 7px var(--gold),0 0 50px -6px var(--gold)}}
+.name{font-family:var(--display);font-weight:800;font-size:clamp(26px,6vw,44px);letter-spacing:.03em;min-height:1.3em;margin:0}
+.hint{color:var(--muted);margin:-10px 0 0;font-size:14px}
+button{font:inherit;cursor:pointer;border-radius:3px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+.draw{background:linear-gradient(180deg,#d9b76b,#a8853f);color:#1a1408;border:1px solid var(--gold-hi);
+  font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:17px;padding:14px 38px;text-transform:uppercase}
+.draw:hover{filter:brightness(1.08)}
+.draw:disabled{opacity:.45;cursor:not-allowed;filter:none}
+
+.prog-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.prog-top b{font-size:22px;color:var(--gold-hi);font-weight:700}
+.bar{position:relative;height:10px;background:var(--panel);border:1px solid var(--line);border-radius:2px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--win),#7fd4a8);width:0;transition:width .5s}
+.mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--gold-hi)}
+.mark-label{font-size:12px;color:var(--gold);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--panel2);border:1px solid var(--line);padding:10px 12px;border-radius:3px}
+.stat span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+.hist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:3px;background:var(--panel2)}
+.hrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px;min-width:0}
+.hrow:first-child{border-top:0}
+.hrow .portrait{width:30px;height:30px;font-size:12px}
+.hrow .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow time{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.pill{font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid;flex:none}
+.pill.win{color:var(--win);border-color:var(--win)}
+.pill.loss{color:var(--lose);border-color:var(--lose)}
+.pill.skip{color:var(--skip);border-color:var(--skip)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);padding:3px;border-radius:4px}
+.tabs button{background:none;border:0;color:var(--muted);padding:6px 12px;font-weight:600;font-size:13px}
+.tabs button[aria-pressed="true"]{background:var(--line);color:var(--fg)}
+.search{background:var(--panel);border:1px solid var(--line);color:var(--fg);padding:8px 10px;border-radius:3px;font:inherit;min-width:0;flex:1 1 180px;max-width:260px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:6px}
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  padding:5px 10px 5px 5px;border-radius:3px;font-size:14px;color:var(--fg);text-align:left;min-width:0}
+.chip .portrait{width:30px;height:30px;font-size:12px}
+.chip .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.won{color:var(--muted);border-color:color-mix(in srgb,var(--win) 40%,var(--line))}
+.chip.won .nm{text-decoration:line-through}
+.chip.won .portrait{filter:grayscale(1);opacity:.6}
+.chip small{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--win);flex:none}
+.chip:hover{border-color:var(--gold)}
+.empty{color:var(--muted);padding:10px 12px;margin:0}
+.note{color:var(--muted);font-size:13px;margin:0;max-width:65ch}
+.ghost{background:none;border:1px solid var(--line);color:var(--fg);padding:7px 12px;font-size:13px}
+.ghost:hover{border-color:var(--gold)}
+.ghost:disabled{opacity:.4;cursor:not-allowed}
+.ghost.danger:hover{border-color:var(--lose);color:var(--lose)}
+
+.lock{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);
+  display:grid;place-items:center;padding:20px 16px}
+.lock[hidden]{display:none}
+.lock-card{background:var(--panel);border:1px solid var(--gold);max-width:460px;width:100%;padding:30px 24px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;border-radius:4px}
+.lock-card .portrait{width:120px;height:120px;font-size:40px;border:2px solid var(--gold)}
+.lock-card .tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.lock-card h2{font-family:var(--display);font-size:clamp(26px,7vw,36px);margin:0;color:var(--gold-hi)}
+.lock-card p{margin:0;color:var(--muted)}
+.lock-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
+.lock-actions button{flex:1 1 140px;padding:13px 16px;font-weight:700;font-size:15px;border:1px solid}
+.yes{background:var(--win);border-color:var(--win)!important;color:#08170f}
+.no{background:none;color:var(--fg);border-color:var(--lose)!important}
+.no:hover{background:color-mix(in srgb,var(--lose) 18%,transparent)}
+.skipb{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline;padding:4px}
+@media (prefers-reduced-motion:reduce){.crest.spin{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Sorteio Arena</h1>
+      <p class="sub">Campeões que ainda faltam vencer no modo Arena</p>
+    </div>
+    <div class="sync" id="sync">Carregando campeões…</div>
+  </header>
+
+  <section class="ring" aria-live="polite">
+    <div class="portrait crest" id="crest">?</div>
+    <p class="name" id="name">Pronto para sortear</p>
+    <p class="hint" id="hint">Clique em sortear para escolher o próximo campeão</p>
+    <button class="draw" id="drawBtn" type="button">Sortear</button>
+  </section>
+
+  <section>
+    <div class="prog-top">
+      <span><b id="wonN">0</b> de <span id="totalN">0</span> vencidos</span>
+      <span><span id="leftN">0</span> restantes</span>
+    </div>
+    <div class="bar"><i id="barFill"></i><span class="mark" id="godMark"></span></div>
+    <span class="mark-label" id="godLabel"></span>
+    <div class="stats">
+      <div class="stat"><span>Partidas</span><b id="sGames">0</b></div>
+      <div class="stat"><span>Vitórias</span><b id="sWins">0</b></div>
+      <div class="stat"><span>Taxa</span><b id="sRate">—</b></div>
+      <div class="stat"><span>Sequência</span><b id="sStreak">0</b></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <h3>Últimas partidas</h3>
+      <button class="ghost" id="undoBtn" type="button" disabled>Desfazer última</button>
+    </div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="tabs" role="group" aria-label="Filtro">
+        <button type="button" data-f="left" aria-pressed="true">Faltam</button>
+        <button type="button" data-f="won" aria-pressed="false">Vencidos</button>
+        <button type="button" data-f="all" aria-pressed="false">Todos</button>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Buscar campeão" autocomplete="off">
+    </div>
+    <p class="note">Clique num campeão para marcar ou desmarcar a vitória manualmente.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h3>Backup</h3>
+    <p class="note">O progresso fica salvo neste navegador. Exporte um backup de vez em quando, ou para levar para outro computador.</p>
+    <div class="btns">
+      <button class="ghost" id="exportBtn" type="button">Exportar backup</button>
+      <button class="ghost" id="importBtn" type="button">Importar backup</button>
+      <input id="importIn" type="file" accept="application/json,.json" hidden>
+      <button class="ghost danger" id="resetBtn" type="button">Zerar progresso</button>
+    </div>
+    <p class="note" id="backupMsg"></p>
+  </section>
+</div>
+
+<div class="lock" id="lock" hidden role="dialog" aria-modal="true" aria-labelledby="lockName">
+  <div class="lock-card">
+    <div class="portrait" id="lockPic"></div>
+    <span class="tag">Campeão sorteado</span>
+    <h2 id="lockName">—</h2>
+    <p>Jogue a partida. Você ganhou com esse campeão?</p>
+    <div class="lock-actions">
+      <button class="yes" id="yesBtn" type="button">Sim, ganhei</button>
+      <button class="no" id="noBtn" type="button">Não ganhei</button>
+    </div>
+    <button class="skipb" id="skipBtn" type="button">Pular sem jogar (não tenho o campeão, indisponível…)</button>
+  </div>
+</div>
+
+<script>
+const DD = "https://ddragon.leagueoflegends.com";
+const GOD = 60; // desafio "Deus da Arena": 1º lugar com 60 campeões diferentes
+const LS = "arena-sorteio-gh-v1", LSC = "arena-campeoes-cache-v1";
+
+// Lista reserva, usada só se o Data Dragon não responder e não houver cache
+const FALLBACK = ["Aatrox","Ahri","Akali","Akshan","Alistar","Ambessa","Amumu","Anivia","Annie","Aphelios","Ashe","Aurelion Sol","Aurora","Azir","Bard","Bel'Veth","Blitzcrank","Brand","Braum","Briar","Caitlyn","Camille","Cassiopeia","Cho'Gath","Corki","Darius","Diana","Dr. Mundo","Draven","Ekko","Elise","Evelynn","Ezreal","Fiddlesticks","Fiora","Fizz","Galio","Gangplank","Garen","Gnar","Gragas","Graves","Gwen","Hecarim","Heimerdinger","Hwei","Illaoi","Irelia","Ivern","Janna","Jarvan IV","Jax","Jayce","Jhin","Jinx","K'Sante","Kai'Sa","Kalista","Karma","Karthus","Kassadin","Katarina","Kayle","Kayn","Kennen","Kha'Zix","Kindred","Kled","Kog'Maw","LeBlanc","Lee Sin","Leona","Lillia","Lissandra","Lucian","Lulu","Lux","Malphite","Malzahar","Maokai","Master Yi","Mel","Milio","Miss Fortune","Mordekaiser","Morgana","Naafiri","Nami","Nasus","Nautilus","Neeko","Nidalee","Nilah","Nocturne","Nunu & Willump","Olaf","Orianna","Ornn","Pantheon","Poppy","Pyke","Qiyana","Quinn","Rakan","Rammus","Rek'Sai","Rell","Renata Glasc","Renekton","Rengar","Riven","Rumble","Ryze","Samira","Sejuani","Senna","Seraphine","Sett","Shaco","Shen","Shyvana","Singed","Sion","Sivir","Skarner","Smolder","Sona","Soraka","Swain","Sylas","Syndra","Tahm Kench","Taliyah","Talon","Taric","Teemo","Thresh","Tristana","Trundle","Tryndamere","Twisted Fate","Twitch","Udyr","Urgot","Varus","Vayne","Veigar","Vel'Koz","Vex","Vi","Viego","Viktor","Vladimir","Volibear","Warwick","Wukong","Xayah","Xerath","Xin Zhao","Yasuo","Yone","Yorick","Yunara","Yuumi","Zaahen","Zac","Zed","Zeri","Ziggs","Zilean","Zoe","Zyra"];
+
+let champs = [];            // [{name, img}]
+let state = { won: [], pending: null, history: [] };
+let filter = "left", spinning = false;
+const $ = id => document.getElementById(id);
+const norm = s => s.normalize("NFD").replace(/[^a-zA-Z0-9]/g,"").toLowerCase();
+
+function all(){ return champs.map(c => c.name); }
+function remaining(){ const w = new Set(state.won); return all().filter(c => !w.has(c)); }
+function imgOf(name){ const c = champs.find(x => x.name === name); return c && c.img; }
+function initials(n){ return n.replace(/[^A-Za-zÀ-ÿ ]/g,"").split(" ").filter(Boolean).slice(0,2).map(p=>p[0]).join("").toUpperCase() || "?"; }
+function fillPortrait(el, name){
+  el.textContent = "";
+  const u = name && imgOf(name);
+  if(u){ const img = new Image(); img.alt = ""; img.src = u; img.onerror = () => { el.textContent = initials(name); }; el.appendChild(img); }
+  else el.textContent = name ? initials(name) : "?";
+}
+function portrait(name){ const d = document.createElement("span"); d.className = "portrait"; fillPortrait(d, name); return d; }
+
+function save(){
+  state.history = state.history.slice(-1000);
+  try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){}
+}
+
+function render(){
+  const total = all().length, left = remaining().length, won = total - left;
+  $("wonN").textContent = won; $("totalN").textContent = total; $("leftN").textContent = left;
+  $("barFill").style.width = total ? (won/total*100)+"%" : "0";
+  $("godMark").style.left = total ? Math.min(100, GOD/total*100)+"%" : "0";
+  $("godLabel").textContent = won >= GOD ? `Deus da Arena alcançado (${GOD} vitórias com campeões diferentes)` : `Marco dourado: Deus da Arena em ${GOD} campeões · faltam ${GOD - won}`;
+  $("drawBtn").disabled = spinning || left === 0 || !!state.pending || !total;
+  if(!spinning && total && left === 0 && !state.pending){ $("name").textContent = "Todos vencidos!"; $("hint").textContent = "Você ganhou com todos os campeões."; $("crest").textContent = "★"; }
+
+  const games = state.history.filter(h => h.r !== "skip");
+  const wins = games.filter(h => h.r === "win").length;
+  let streak = 0; for(let i = games.length - 1; i >= 0 && games[i].r === "win"; i--) streak++;
+  $("sGames").textContent = games.length; $("sWins").textContent = wins;
+  $("sRate").textContent = games.length ? Math.round(wins/games.length*100) + "%" : "—";
+  $("sStreak").textContent = streak;
+
+  const h = $("hist"); h.innerHTML = "";
+  const recent = state.history.slice(-8).reverse();
+  if(!recent.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "Nenhuma partida registrada ainda. Os resultados dos sorteios aparecem aqui."; h.appendChild(p); }
+  for(const e of recent){
+    const r = document.createElement("div"); r.className = "hrow";
+    r.appendChild(portrait(e.c));
+    const w = document.createElement("span"); w.className = "who"; w.textContent = e.c; r.appendChild(w);
+    const t = document.createElement("time"); t.textContent = new Date(e.t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); r.appendChild(t);
+    const p = document.createElement("span"); p.className = "pill " + e.r; p.textContent = e.r === "win" ? "Vitória" : e.r === "loss" ? "Derrota" : "Pulado"; r.appendChild(p);
+    h.appendChild(r);
+  }
+  $("undoBtn").disabled = !state.history.length || !!state.pending || spinning;
+
+  const q = norm($("search").value);
+  const ws = new Set(state.won);
+  let list = all();
+  if(filter === "left") list = list.filter(c => !ws.has(c));
+  if(filter === "won") list = list.filter(c => ws.has(c));
+  if(q) list = list.filter(c => norm(c).includes(q));
+  const g = $("grid"); g.innerHTML = "";
+  if(!list.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "Nenhum campeão aqui."; g.appendChild(p); }
+  for(const c of list){
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip" + (ws.has(c) ? " won" : "");
+    b.appendChild(portrait(c));
+    const s = document.createElement("span"); s.className = "nm"; s.textContent = c; b.appendChild(s);
+    if(ws.has(c)){ const sm = document.createElement("small"); sm.textContent = "vitória"; b.appendChild(sm); }
+    b.title = ws.has(c) ? "Clique para desmarcar a vitória" : "Clique para marcar como vencido";
+    b.onclick = () => { if(ws.has(c)) state.won = state.won.filter(x => x !== c); else state.won.push(c); save(); render(); };
+    g.appendChild(b);
+  }
+  showLock();
+}
+
+function showLock(){
+  const lk = $("lock");
+  if(state.pending && !spinning){
+    $("lockName").textContent = state.pending; fillPortrait($("lockPic"), state.pending);
+    if(lk.hidden){ lk.hidden = false; $("yesBtn").focus(); }
+  } else lk.hidden = true;
+}
+
+function draw(){
+  const pool = remaining(); if(!pool.length || spinning || state.pending) return;
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  spinning = true; $("crest").classList.add("spin"); $("hint").textContent = "Sorteando…"; render();
+  let t = 0, delay = 50; const end = reduce ? 0 : 2400;
+  const tick = () => {
+    const c = t >= end ? pick : pool[Math.floor(Math.random()*pool.length)];
+    $("name").textContent = c; fillPortrait($("crest"), c);
+    if(t >= end){
+      spinning = false; $("crest").classList.remove("spin");
+      $("hint").textContent = "Campeão sorteado";
+      state.pending = pick; save(); setTimeout(render, reduce ? 0 : 700); return;
+    }
+    t += delay; delay = Math.min(delay * 1.07, 280); setTimeout(tick, delay);
+  };
+  tick();
+}
+
+function answer(r){
+  const c = state.pending; if(!c) return;
+  if(r === "win" && !state.won.includes(c)) state.won.push(c);
+  state.history.push({ c, r, t: Date.now() });
+  state.pending = null;
+  $("name").textContent = r === "win" ? c + " removido" : "Pronto para sortear";
+  $("hint").textContent = r === "win" ? "Vitória registrada. Sorteie o próximo." : r === "loss" ? c + " continua na lista. Sorteie de novo." : c + " foi pulado e continua na lista.";
+  if(r === "win") fillPortrait($("crest"), c); else $("crest").textContent = "?";
+  save(); render();
+}
+
+function undo(){
+  const e = state.history.pop(); if(!e) return;
+  if(e.r === "win") state.won = state.won.filter(x => x !== e.c);
+  $("name").textContent = "Pronto para sortear"; $("hint").textContent = `Resultado de ${e.c} desfeito.`; $("crest").textContent = "?";
+  save(); render();
+}
+
+// Backup
+$("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `sorteio-arena-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $("backupMsg").textContent = "Backup exportado.";
+};
+$("importBtn").onclick = () => $("importIn").click();
+$("importIn").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  try{
+    const s = JSON.parse(await f.text());
+    if(!Array.isArray(s.won)) throw 0;
+    state = { won: s.won, pending: s.pending || null, history: s.history || [] };
+    save(); render(); $("backupMsg").textContent = `Backup importado: ${state.won.length} vitórias.`;
+  }catch(err){ $("backupMsg").textContent = "Esse arquivo não é um backup válido do Sorteio Arena."; }
+};
+let resetArmed = false;
+$("resetBtn").onclick = () => {
+  if(!resetArmed){ resetArmed = true; $("resetBtn").textContent = "Clique de novo para confirmar"; setTimeout(() => { resetArmed = false; $("resetBtn").textContent = "Zerar progresso"; }, 4000); return; }
+  state = { won: [], pending: null, history: [] }; save(); render();
+  resetArmed = false; $("resetBtn").textContent = "Zerar progresso"; $("backupMsg").textContent = "Progresso zerado.";
+};
+
+$("drawBtn").onclick = draw;
+$("yesBtn").onclick = () => answer("win");
+$("noBtn").onclick = () => answer("loss");
+$("skipBtn").onclick = () => answer("skip");
+$("undoBtn").onclick = undo;
+$("search").oninput = render;
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  filter = b.dataset.f; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();
+});
+
+// Carregamento: progresso salvo + lista de campeões direto da Riot (Data Dragon)
+try{ const s = JSON.parse(localStorage.getItem(LS) || "null"); if(s) state = { won: s.won || [], pending: s.pending || null, history: s.history || [] }; }catch(e){}
+
+function setChamps(list){ champs = list.sort((a,b) => a.name.localeCompare(b.name, "pt")); render(); }
+try{ const c = JSON.parse(localStorage.getItem(LSC) || "null"); if(c && c.list) setChamps(c.list); }catch(e){}
+
+(async () => {
+  try{
+    const versions = await (await fetch(`${DD}/api/versions.json`)).json();
+    const v = versions[0];
+    const data = (await (await fetch(`${DD}/cdn/${v}/data/pt_BR/champion.json`)).json()).data;
+    const list = Object.values(data).map(c => ({ name: c.name, img: `${DD}/cdn/${v}/img/champion/${c.image.full}` }));
+    try{ localStorage.setItem(LSC, JSON.stringify({ v, list })); }catch(e){}
+    setChamps(list);
+    $("sync").textContent = `Patch ${v} · ${list.length} campeões`;
+  }catch(e){
+    if(!champs.length) setChamps(FALLBACK.map(n => ({ name: n, img: null })));
+    $("sync").textContent = "Sem conexão com a Riot · lista salva";
+  }
+})();
+</script>
+</body>
+</html>
